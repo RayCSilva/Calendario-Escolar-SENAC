@@ -1,0 +1,1286 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendário de Presença - Sistema Determinístico Avançado</title>
+    <style>
+        /* ========== VARIÁVEIS E RESET ========== */
+        :root {
+            --primary: #2E86AB;
+            --primary-light: #E3F2FD;
+            --secondary: #4CAF50;
+            --danger: #FF3B30;
+            --warning: #FF9800;
+            --light: #f8f9fa;
+            --dark: #343a40;
+            --gray: #6c757d;
+            --border: #dee2e6;
+            --radius: 8px;
+            --course-start: #4CAF50;
+            --course-end: #2E86AB;
+            --course-progress: #9C27B0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: var(--dark);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: var(--radius);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+
+        /* ========== CABEÇALHO ========== */
+        .header {
+            background: var(--primary);
+            color: white;
+            padding: 25px 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        /* ========== LAYOUT PRINCIPAL ========== */
+        .main-content {
+            display: flex;
+            min-height: 600px;
+        }
+
+        .sidebar {
+            width: 350px;
+            background: var(--light);
+            border-right: 1px solid var(--border);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .calendar-section {
+            flex: 1;
+            padding: 20px;
+        }
+
+        /* ========== CALENDÁRIO ========== */
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .current-month {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 1px;
+            background: var(--border);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .calendar-day-header {
+            background: var(--primary);
+            color: white;
+            padding: 15px 5px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .calendar-day {
+            background: white;
+            min-height: 100px;
+            padding: 10px;
+            position: relative;
+            border: 1px solid var(--border);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .calendar-day:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            z-index: 1;
+        }
+
+        .calendar-day.present {
+            background-color: #E8F5E9;
+            border-left: 4px solid var(--secondary);
+        }
+
+        .calendar-day.absent {
+            background-color: #FFEBEE;
+            border-left: 4px solid var(--danger);
+        }
+
+        .calendar-day.unmarked {
+            background-color: white;
+        }
+
+        .day-number {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .day-status {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            margin-top: 5px;
+            font-weight: bold;
+        }
+
+        .status-present {
+            background: var(--secondary);
+            color: white;
+        }
+
+        .status-absent {
+            background: var(--danger);
+            color: white;
+        }
+
+        /* ========== PAINEL DE FREQUÊNCIA ========== */
+        .panel {
+            background: white;
+            padding: 20px;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .panel-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .panel-value {
+            font-size: 2rem;
+            font-weight: bold;
+        }
+
+        .panel-value.safe {
+            color: var(--secondary);
+        }
+
+        .panel-value.warning {
+            color: var(--warning);
+        }
+
+        .panel-value.danger {
+            color: var(--danger);
+        }
+
+        /* ========== BARRAS DE PROGRESSO ========== */
+        .progress-container {
+            margin: 15px 0;
+        }
+
+        .progress-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+            color: var(--gray);
+        }
+
+        .progress-bar {
+            height: 20px;
+            background: var(--light);
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.5s ease;
+        }
+
+        .progress-fill.safe {
+            background: linear-gradient(90deg, var(--secondary), #81C784);
+        }
+
+        .progress-fill.warning {
+            background: linear-gradient(90deg, var(--warning), #FFB74D);
+        }
+
+        .progress-fill.danger {
+            background: linear-gradient(90deg, var(--danger), #E57373);
+        }
+
+        .progress-fill.course {
+            background: linear-gradient(90deg, var(--course-start), var(--course-progress), var(--course-end));
+        }
+
+        .minimum-line {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--dark);
+        }
+
+        /* ========== PROGRESSO DO CURSO ========== */
+        .course-progress-container {
+            background: white;
+            padding: 20px;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            margin-bottom: 20px;
+        }
+
+        .course-timeline {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+            color: var(--gray);
+        }
+
+        .course-progress-bar {
+            height: 25px;
+            background: linear-gradient(90deg, var(--course-start), var(--course-end));
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+            margin-bottom: 10px;
+        }
+
+        .course-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--course-progress), #7B1FA2);
+            border-radius: 12px;
+            transition: width 0.5s ease;
+            width: 0%;
+        }
+
+        /* ========== SITUAÇÃO DO ALUNO ========== */
+        .status-card {
+            padding: 15px;
+            border-radius: var(--radius);
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .status-card.safe {
+            background: #E8F5E9;
+            color: var(--secondary);
+            border: 2px solid var(--secondary);
+        }
+
+        .status-card.warning {
+            background: #FFF3E0;
+            color: var(--warning);
+            border: 2px solid var(--warning);
+        }
+
+        .status-card.danger {
+            background: #FFEBEE;
+            color: var(--danger);
+            border: 2px solid var(--danger);
+        }
+
+        /* ========== ESTATÍSTICAS ========== */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 15px;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--primary);
+            margin: 5px 0;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--gray);
+        }
+
+        /* ========== ALERTAS ========== */
+        .alert-box {
+            padding: 15px;
+            border-radius: var(--radius);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .alert-box.warning {
+            background: #FFF3E0;
+            border-left: 4px solid var(--warning);
+        }
+
+        .alert-box.danger {
+            background: #FFEBEE;
+            border-left: 4px solid var(--danger);
+        }
+
+        /* ========== BOTÕES ========== */
+        .btn {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: var(--radius);
+            background: var(--primary);
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+
+        .btn-success {
+            background: var(--secondary);
+        }
+
+        .btn-warning {
+            background: var(--warning);
+        }
+
+        /* ========== INFORMAÇÕES DO CURSO ========== */
+        .course-info {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .course-info-item {
+            padding: 10px;
+            background: var(--light);
+            border-radius: var(--radius);
+            font-size: 0.9rem;
+        }
+
+        /* ========== DIA ATUAL NO CALENDÁRIO ========== */
+        .calendar-day.today {
+            background-color: #FFF3E0;
+            border: 2px solid var(--warning);
+        }
+
+        .calendar-day.today .day-number {
+            color: var(--warning);
+            font-weight: bold;
+        }
+
+        /* ========== RESPONSIVO ========== */
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid var(--border);
+            }
+            
+            .calendar-day {
+                min-height: 80px;
+                padding: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- CABEÇALHO -->
+        <div class="header">
+            <h1>Calendário de Presença - Sistema Determinístico Avançado</h1>
+            <p>O estado é a única fonte da verdade - Cálculos em tempo real</p>
+        </div>
+
+        <div class="main-content">
+            <!-- BARRA LATERAL COM DADOS E ESTATÍSTICAS -->
+            <div class="sidebar">
+                <!-- PAINEL DE FREQUÊNCIA COM MÉTRICAS FIXAS -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title">Frequência Atual</div>
+                        <div class="panel-value safe" id="frequency-value">78,91%</div>
+                    </div>
+
+                    <!-- BARRA DE FREQUÊNCIA -->
+                    <div class="progress-container">
+                        <div class="progress-labels">
+                            <span>0%</span>
+                            <span>75% (Mínimo)</span>
+                            <span>100%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill safe" id="frequency-progress" style="width: 78.91%"></div>
+                            <div class="minimum-line" style="left: 75%"></div>
+                        </div>
+                    </div>
+
+                    <!-- SITUAÇÃO DO ALUNO -->
+                    <div class="status-card safe" id="status-card">
+                        ✅ APTO - Não reprovado por frequência
+                    </div>
+                </div>
+
+                <!-- PROGRESSO DO CURSO -->
+                <div class="course-progress-container">
+                    <div class="panel-header">
+                        <div class="panel-title">Progresso do Curso</div>
+                        <div class="panel-value" id="course-progress-value">0%</div>
+                    </div>
+                    
+                    <div class="course-timeline">
+                        <span>01/01</span>
+                        <span>Período Letivo</span>
+                        <span>13/02</span>
+                    </div>
+                    
+                    <div class="course-progress-bar">
+                        <div class="course-progress-fill" id="course-progress-fill"></div>
+                    </div>
+                    
+                    <div style="font-size: 0.9rem; text-align: center; color: var(--gray);">
+                        Dias concluídos: <span id="course-days-done">0</span> de <span id="course-total-days">33</span>
+                    </div>
+                </div>
+
+                <!-- ESTATÍSTICAS COM MÉTRICAS FIXAS -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">Faltas Acumuladas</div>
+                        <div class="stat-value" id="total-absences">253h</div>
+                        <div class="stat-label">Histórico do curso</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-label">Impacto por Falta</div>
+                        <div class="stat-value" id="impact-per-absence">-0,25%</div>
+                        <div class="stat-label">na frequência</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-label">Frequência Mínima</div>
+                        <div class="stat-value">75%</div>
+                        <div class="stat-label">para aprovação</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-label">Dias Restantes</div>
+                        <div class="stat-value" id="remaining-days">33</div>
+                        <div class="stat-label">no período</div>
+                    </div>
+                </div>
+
+                <!-- ALERTAS DINÂMICOS -->
+                <div class="alert-box warning" id="alert-box">
+                    <div style="font-size: 1.5rem;">⚠️</div>
+                    <div id="alert-message">
+                        <strong>Atenção:</strong> Mais <span id="remaining-absences">2</span> faltas podem 
+                        resultar em reprovação por frequência.
+                    </div>
+                </div>
+
+                <!-- INFORMAÇÕES DO CURSO -->
+                <div class="panel">
+                    <h4 style="color: var(--primary); margin-bottom: 10px;">
+                        📅 Período Letivo 2026
+                    </h4>
+                    <div class="course-info">
+                        <div class="course-info-item">
+                            <div style="font-size: 0.8rem; color: var(--gray);">Início</div>
+                            <div style="font-weight: bold;">01 de Janeiro</div>
+                        </div>
+                        <div class="course-info-item">
+                            <div style="font-size: 0.8rem; color: var(--gray);">Término</div>
+                            <div style="font-weight: bold;">13 de Fevereiro</div>
+                        </div>
+                        <div class="course-info-item">
+                            <div style="font-size: 0.8rem; color: var(--gray);">Dias Letivos</div>
+                            <div style="font-weight: bold;" id="total-course-days">33</div>
+                        </div>
+                        <div class="course-info-item">
+                            <div style="font-size: 0.8rem; color: var(--gray);">Dias Simulados</div>
+                            <div style="font-weight: bold;" id="simulated-days">0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CONTROLES -->
+                <div style="margin-top: auto;">
+                    <button class="btn btn-success" id="save-btn">
+                        💾 Salvar Progresso
+                    </button>
+                    
+                    <button class="btn btn-warning" id="reset-month-btn">
+                        🔄 Limpar Mês Atual
+                    </button>
+                    
+                    <button class="btn" id="reset-btn" style="background: var(--gray);">
+                        🗑️ Reiniciar Tudo
+                    </button>
+                </div>
+            </div>
+
+            <!-- CALENDÁRIO PRINCIPAL -->
+            <div class="calendar-section">
+                <div class="calendar-header">
+                    <div class="current-month" id="current-month">Janeiro 2026</div>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn" id="prev-month" style="width: auto; padding: 8px 15px;">
+                            ← Janeiro
+                        </button>
+                        <button class="btn" id="today-btn" style="width: auto; padding: 8px 15px; background: var(--warning);">
+                            📅 Hoje
+                        </button>
+                        <button class="btn" id="next-month" style="width: auto; padding: 8px 15px;">
+                            Fevereiro →
+                        </button>
+                    </div>
+                </div>
+
+                <!-- GRADE DO CALENDÁRIO -->
+                <div class="calendar-grid" id="calendar-grid">
+                    <!-- Cabeçalhos serão gerados dinamicamente -->
+                </div>
+
+                <!-- RESUMO DO MÊS -->
+                <!-- INFORMAÇÕES DO ESTADO -->
+                <div class="panel">
+                    <h3 style="color: var(--primary); margin-bottom: 15px;">
+                        Estado do Sistema - 2026
+                    </h3>
+                    <div style="font-size: 0.9rem;">
+                        <p><strong>Total de dias no curso:</strong> <span id="state-total-days">33</span></p>
+                        <p><strong>Dias no mês atual:</strong> <span id="state-month-days">0</span></p>
+                        <p><strong>Dias com estado definido:</strong> <span id="state-defined-days">0</span></p>
+                        <p style="margin-top: 10px; font-size: 0.8rem; color: var(--gray);">
+                            Todo cálculo deriva exclusivamente do objeto de estado
+                        </p>
+                    </div>
+                </div>
+
+                <!-- LEGENDA E INSTRUÇÕES -->
+                <div class="panel">
+                    <h4 style="color: var(--primary); margin-bottom: 10px;">
+                        🖱️ Como usar o sistema
+                    </h4>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
+                        <div>
+                            <p style="font-size: 0.9rem; margin-bottom: 10px;">
+                                <strong>Calendário 2026:</strong> Clique nos dias para alternar entre:
+                            </p>
+                            <div style="font-size: 0.85rem;">
+                                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 5px;">
+                                    <div style="width: 15px; height: 15px; background: #E8F5E9; border: 2px solid var(--secondary); border-radius: 3px;"></div>
+                                    <span>✅ Presença (não afeta frequência)</span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <div style="width: 15px; height: 15px; background: #FFEBEE; border: 2px solid var(--danger); border-radius: 3px;"></div>
+                                    <span>❌ Ausência (-0,25% na frequência)</span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 8px; margin-top: 5px;">
+                                    <div style="width: 15px; height: 15px; background: #FFF3E0; border: 2px solid var(--warning); border-radius: 3px;"></div>
+                                    <span>📅 Hoje (destaque automático)</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <p style="font-size: 0.9rem; margin-bottom: 10px;">
+                                <strong>Barras de Progresso:</strong>
+                            </p>
+                            <div style="font-size: 0.85rem;">
+                                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 5px;">
+                                    <div style="width: 15px; height: 15px; background: linear-gradient(90deg, var(--secondary), #81C784); border-radius: 3px;"></div>
+                                    <span>Frequência atual (78,91% inicial)</span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <div style="width: 15px; height: 15px; background: linear-gradient(90deg, var(--course-progress), #7B1FA2); border-radius: 3px;"></div>
+                                    <span>Progresso do período letivo</span>
+                                </div>
+                            </div>
+                            <p style="font-size: 0.9rem; margin-top: 15px;">
+                                <strong>Estado Determinístico:</strong> Todos os cálculos derivam exclusivamente do objeto de estado central.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ========== CONSTANTES DO SISTEMA (MÉTRICAS FIXAS - 2026) ==========
+
+        const HOJE_SISTEMA = new Date(2026, 0, 26);
+
+        const SYSTEM_METRICS = {
+            // Dados históricos do aluno (EXATAMENTE como definido)
+            FREQUENCIA_INICIAL: 78.91,           // Percentagem atual do curso
+            FALTAS_ACUMULADAS: 253,              // Horas de falta históricas
+            FREQUENCIA_MINIMA: 75,               // Mínimo para não reprovar
+            IMPACTO_POR_FALTA: 0.25,             // Cada falta reduz 0,25% na frequência
+            HORAS_POR_DIA: 4,                    // 1 dia letivo = 4 horas
+            
+            // Período letivo fixo (01/01 a 13/02) - AGORA 2026
+            PERIODO_INICIO: new Date(2026, 0, 1),   // 01 de Janeiro 2026
+            PERIODO_FIM: new Date(2026, 1, 13),     // 13 de Fevereiro 2026
+            ANO_BASE: 2026,                         // ANO 2026
+            
+            // Configurações do calendário
+            DIAS_POR_SEMANA: 7,
+            SEMANAS_NO_CALENDARIO: 6
+        };
+
+        // ========== ESTADO GLOBAL DO SISTEMA ==========
+        const state = {
+            // Métricas fixas (nunca alteradas)
+            metrics: { ...SYSTEM_METRICS },
+            
+            // Estado dinâmico da simulação
+            frequenciaAtual: SYSTEM_METRICS.FREQUENCIA_INICIAL,
+            
+            // Dias marcados no calendário (chave: data ISO, valor: 'present' | 'absent')
+            diasMarcados: {},
+            
+            // Mês atualmente exibido (0 = Janeiro, 1 = Fevereiro)
+            mesAtual: 0,
+            
+            // Progresso do período letivo
+            progressoCurso: {
+                diasConcluidos: 0,
+                percentagemConcluida: 0,
+                diasNoPeriodo: 0
+            },
+            
+            // Estatísticas mensais
+            estatisticasMensais: {
+                janeiro: { presentes: 0, ausentes: 0, impacto: 0 },
+                fevereiro: { presentes: 0, ausentes: 0, impacto: 0 }
+            }
+        };
+
+        // ========== INICIALIZAÇÃO DO SISTEMA ==========
+        document.addEventListener('DOMContentLoaded', function() {
+            // 1. Calcular total de dias no período letivo
+            calcularDiasPeriodoLetivo();
+            
+            // 2. Carregar estado salvo
+            carregarEstado();
+            
+            // 3. Configurar eventos
+            configurarEventos();
+            
+            // 4. Renderizar calendário inicial
+            renderizarCalendario();
+            
+            // 5. Calcular estado inicial
+            calcularEstadoCompleto();
+            
+            // 6. Atualizar interface
+            atualizarInterfaceCompleta();
+        });
+
+        // ========== FUNÇÃO: CALCULAR DIAS DO PERÍODO LETIVO ==========
+        function calcularDiasPeriodoLetivo() {
+            const inicio = SYSTEM_METRICS.PERIODO_INICIO;
+            const fim = SYSTEM_METRICS.PERIODO_FIM;
+            
+            // Calcular dias úteis (segunda a sexta) entre as datas
+            let diasUteis = 0;
+            let dataAtual = new Date(inicio);
+            
+            while (dataAtual <= fim) {
+                const diaSemana = dataAtual.getDay();
+                // 1-5 = Segunda a Sexta
+                if (diaSemana >= 1 && diaSemana <= 5) {
+                    diasUteis++;
+                }
+                dataAtual.setDate(dataAtual.getDate() + 1);
+            }
+            
+            state.progressoCurso.diasNoPeriodo = diasUteis;
+            document.getElementById('total-course-days').textContent = diasUteis;
+            document.getElementById('course-total-days').textContent = diasUteis;
+        }
+
+        // ========== FUNÇÃO PRINCIPAL: CALCULAR ESTADO COMPLETO ==========
+        function calcularEstadoCompleto() {
+            // 1. Calcular frequência atual (EXATAMENTE como no sistema anterior)
+            calcularFrequencia();
+            
+            // 2. Calcular progresso do período letivo
+            calcularProgressoPeriodo();
+            
+            // 3. Calcular estatísticas por mês
+            calcularEstatisticasMensais();
+        }
+
+        // ========== FUNÇÃO: CALCULAR FREQUÊNCIA (MESMA LÓGICA) ==========
+        function calcularFrequencia() {
+            // Contar total de ausências na simulação
+            const totalAusencias = Object.values(state.diasMarcados)
+                .filter(status => status === 'absent')
+                .length;
+            
+            // Calcular impacto total das ausências simuladas
+            const impactoTotal = totalAusencias * SYSTEM_METRICS.IMPACTO_POR_FALTA;
+            
+            // Calcular frequência atual (frequência inicial - impacto das ausências)
+            state.frequenciaAtual = SYSTEM_METRICS.FREQUENCIA_INICIAL - impactoTotal;
+            
+            // Garantir que frequência não fique negativa
+            state.frequenciaAtual = Math.max(0, state.frequenciaAtual);
+        }
+
+        // ========== FUNÇÃO: CALCULAR PROGRESSO DO PERÍODO ==========
+        function calcularProgressoPeriodo() {
+            // Contar todos os dias marcados (presença ou ausência) dentro do período
+            const diasMarcadosNoPeriodo = Object.keys(state.diasMarcados)
+                .filter(dataStr => {
+                    const data = new Date(dataStr);
+                    return data >= SYSTEM_METRICS.PERIODO_INICIO && 
+                           data <= SYSTEM_METRICS.PERIODO_FIM;
+                })
+                .length;
+            
+            state.progressoCurso.diasConcluidos = diasMarcadosNoPeriodo;
+            
+            // Calcular porcentagem concluída do período
+            if (state.progressoCurso.diasNoPeriodo > 0) {
+                state.progressoCurso.percentagemConcluida = 
+                    (diasMarcadosNoPeriodo / state.progressoCurso.diasNoPeriodo) * 100;
+            }
+        }
+
+        // ========== FUNÇÃO: CALCULAR ESTATÍSTICAS MENSAS ==========
+        function calcularEstatisticasMensais() {
+            // Janeiro (mês 0)
+            const diasJaneiro = Object.entries(state.diasMarcados)
+                .filter(([dataStr]) => {
+                    const data = new Date(dataStr);
+                    return data.getMonth() === 0 && 
+                           data.getFullYear() === SYSTEM_METRICS.ANO_BASE;
+                });
+            
+            const presentesJan = diasJaneiro.filter(([, status]) => status === 'present').length;
+            const ausentesJan = diasJaneiro.filter(([, status]) => status === 'absent').length;
+            const impactoJan = ausentesJan * SYSTEM_METRICS.IMPACTO_POR_FALTA;
+            
+            // Fevereiro (mês 1)
+            const diasFevereiro = Object.entries(state.diasMarcados)
+                .filter(([dataStr]) => {
+                    const data = new Date(dataStr);
+                    return data.getMonth() === 1 && 
+                           data.getFullYear() === SYSTEM_METRICS.ANO_BASE;
+                });
+            
+            const presentesFev = diasFevereiro.filter(([, status]) => status === 'present').length;
+            const ausentesFev = diasFevereiro.filter(([, status]) => status === 'absent').length;
+            const impactoFev = ausentesFev * SYSTEM_METRICS.IMPACTO_POR_FALTA;
+            
+            // Armazenar para uso na interface
+            state.estatisticasMensais = {
+                janeiro: { presentes: presentesJan, ausentes: ausentesJan, impacto: impactoJan },
+                fevereiro: { presentes: presentesFev, ausentes: ausentesFev, impacto: impactoFev }
+            };
+        }
+
+        // ========== RENDERIZAR CALENDÁRIO ==========
+        function renderizarCalendario() {
+            const container = document.getElementById('calendar-grid');
+            container.innerHTML = '';
+            
+            // Adicionar cabeçalhos dos dias da semana
+            const diasSemana = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+            diasSemana.forEach(dia => {
+                const header = document.createElement('div');
+                header.className = 'calendar-day-header';
+                header.textContent = dia;
+                container.appendChild(header);
+            });
+            
+            // Determinar mês e ano para renderização
+            const ano = SYSTEM_METRICS.ANO_BASE;
+            const mes = state.mesAtual;
+            
+            // Calcular datas do mês
+            const primeiroDia = new Date(ano, mes, 1);
+            const ultimoDia = new Date(ano, mes + 1, 0);
+            const primeiroDiaSemana = primeiroDia.getDay();
+            const diasNoMes = ultimoDia.getDate();
+            
+            // Atualizar título do mês
+            const meses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 
+                          'Julio', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+            document.getElementById('current-month').textContent = 
+                `${meses[mes]} ${ano}`;
+            
+            // Verificar data atual
+            const hoje = HOJE_SISTEMA;
+            const hojeStr = HOJE_SISTEMA 
+            ? formatarData(HOJE_SISTEMA)
+            : null;
+
+
+            
+            // Dias do mês anterior (fora do período letivo)
+            for (let i = 0; i < primeiroDiaSemana; i++) {
+                criarDiaForaPeriodo();
+            }
+            
+            // Dias do mês atual
+            for (let dia = 1; dia <= diasNoMes; dia++) {
+                const data = new Date(ano, mes, dia);
+                criarDiaCalendario(data, dia, hojeStr);
+            }
+            
+            // Dias do próximo mês (fora do período letivo)
+            const totalCelulas = SYSTEM_METRICS.DIAS_POR_SEMANA * SYSTEM_METRICS.SEMANAS_NO_CALENDARIO;
+            const celulasUsadas = primeiroDiaSemana + diasNoMes;
+            const diasRestantes = totalCelulas - celulasUsadas;
+            
+            for (let i = 1; i <= diasRestantes; i++) {
+                criarDiaForaPeriodo();
+            }
+            
+            // Atualizar informação de estado
+            document.getElementById('state-month-days').textContent = diasNoMes;
+            document.getElementById('state-total-days').textContent = 33; // Dias do curso
+        }
+
+        function criarDiaCalendario(data, diaNumero, hojeStr) {
+            const container = document.getElementById('calendar-grid');
+            const dataStr = formatarData(data);
+            const elementoDia = document.createElement('div');
+            
+            // Verificar se está dentro do período letivo
+            const dentroPeriodo = data >= SYSTEM_METRICS.PERIODO_INICIO && 
+                                 data <= SYSTEM_METRICS.PERIODO_FIM;
+            
+            // Verificar se é dia útil (segunda a sexta)
+            const diaUtil = data.getDay() >= 1 && data.getDay() <= 5;
+            
+            // Verificar se é hoje
+            const isToday = dataStr === hojeStr;
+            
+            // Obter status atual do dia
+            const statusAtual = state.diasMarcados[dataStr];
+            
+            // Definir classes CSS
+            let classes = ['calendar-day'];
+            
+            if (isToday) {
+                classes.push('today');
+            }
+            
+            if (!dentroPeriodo) {
+                classes.push('outside-period');
+                elementoDia.style.opacity = '0.4';
+                elementoDia.style.cursor = 'not-allowed';
+            } else if (!diaUtil) {
+                classes.push('weekend');
+                elementoDia.style.opacity = '0.6';
+                elementoDia.style.cursor = 'not-allowed';
+            } else {
+                // Dia útil dentro do período - totalmente interativo
+                classes.push(statusAtual || 'unmarked');
+            }
+            
+            elementoDia.className = classes.join(' ');
+            
+            // Conteúdo do dia
+            const statusHTML = statusAtual ? 
+                `<div class="day-status status-${statusAtual}">${statusAtual === 'present' ? '✓' : '✗'}</div>` : 
+                '';
+            
+            const hojeHTML = isToday ? '<div style="font-size: 0.7rem; color: var(--warning); font-weight: bold;">HOJE</div>' : '';
+            
+            elementoDia.innerHTML = `
+                <div class="day-number">${diaNumero}</div>
+                ${statusHTML}
+                ${hojeHTML}
+                ${dentroPeriodo && diaUtil ? '<div style="font-size: 0.7rem; color: #666;">Dia letivo</div>' : ''}
+            `;
+            
+            // Adicionar evento de clique apenas para dias úteis dentro do período
+            if (dentroPeriodo && diaUtil) {
+                elementoDia.addEventListener('click', () => alternarStatusDia(dataStr));
+            }
+            
+            container.appendChild(elementoDia);
+        }
+
+        function criarDiaForaPeriodo() {
+            const container = document.getElementById('calendar-grid');
+            const elementoDia = document.createElement('div');
+            elementoDia.className = 'calendar-day outside-period';
+            elementoDia.style.opacity = '0.3';
+            elementoDia.innerHTML = '<div style="opacity: 0.3;"></div>';
+            container.appendChild(elementoDia);
+        }
+
+        // ========== MANIPULAR CLIQUE NO DIA ==========
+        function alternarStatusDia(dateString) {
+            const statusAtual = state.diasMarcados[dateString];
+            let novoStatus;
+
+            if (!statusAtual) {
+                novoStatus = 'present';
+            } else if (statusAtual === 'present') {
+                novoStatus = 'absent';
+            } else {
+                novoStatus = undefined;
+            }
+
+            if (novoStatus) {
+                state.diasMarcados[dateString] = novoStatus;
+            } else {
+                delete state.diasMarcados[dateString];
+            }
+
+            // 🔧 ORDEM CORRETA
+            calcularEstadoCompleto();
+            renderizarCalendario();
+            atualizarInterfaceCompleta();
+        }
+
+        // ========== ATUALIZAR INTERFACE COMPLETA ==========
+        function atualizarInterfaceCompleta() {
+            // 1. Atualizar frequência
+            atualizarFrequencia();
+            
+            // 2. Atualizar progresso do curso
+            atualizarProgressoCurso();
+            
+            // 3. Atualizar estatísticas
+            atualizarEstatisticas();
+            
+            // 4. Atualizar situação do aluno
+            atualizarSituacaoAluno();
+            
+            // 5. Atualizar resumo mensal
+            atualizarResumoMensal();
+            
+            // 6. Atualizar informações do estado
+            document.getElementById('state-defined-days').textContent = Object.keys(state.diasMarcados).length;
+        }
+
+        function atualizarFrequencia() {
+            const frequenciaFormatada = state.frequenciaAtual.toFixed(2).replace('.', ',');
+            document.getElementById('frequency-value').textContent = `${frequenciaFormatada}%`;
+            
+            // Atualizar barra de frequência
+            const progresso = Math.max(0, Math.min(100, state.frequenciaAtual));
+            const progressFill = document.getElementById('frequency-progress');
+            progressFill.style.width = `${progresso}%`;
+            
+            // Atualizar classe de cor
+            const frequencyValue = document.getElementById('frequency-value');
+            if (state.frequenciaAtual >= 80) {
+                frequencyValue.className = 'panel-value safe';
+                progressFill.className = 'progress-fill safe';
+            } else if (state.frequenciaAtual >= SYSTEM_METRICS.FREQUENCIA_MINIMA) {
+                frequencyValue.className = 'panel-value warning';
+                progressFill.className = 'progress-fill warning';
+            } else {
+                frequencyValue.className = 'panel-value danger';
+                progressFill.className = 'progress-fill danger';
+            }
+        }
+
+        function atualizarProgressoCurso() {
+            const percentagem = state.progressoCurso.percentagemConcluida;
+            const valorFormatado = percentagem.toFixed(1).replace('.', ',');
+            
+            document.getElementById('course-progress-value').textContent = `${valorFormatado}%`;
+            document.getElementById('course-progress-fill').style.width = `${percentagem}%`;
+            document.getElementById('course-days-done').textContent = state.progressoCurso.diasConcluidos;
+            document.getElementById('simulated-days').textContent = state.progressoCurso.diasConcluidos;
+            
+            // Calcular dias restantes
+            const diasRestantes = state.progressoCurso.diasNoPeriodo - state.progressoCurso.diasConcluidos;
+            document.getElementById('remaining-days').textContent = Math.max(0, diasRestantes);
+        }
+
+        function atualizarEstatisticas() {
+            // Contar ausências simuladas
+            const ausenciasSimuladas = Object.values(state.diasMarcados)
+                .filter(status => status === 'absent').length;
+            
+            // Calcular faltas permitidas antes da reprovação
+            const margemAtual = state.frequenciaAtual - SYSTEM_METRICS.FREQUENCIA_MINIMA;
+            const faltasPermitidas = Math.floor(margemAtual / SYSTEM_METRICS.IMPACTO_POR_FALTA);
+            
+            document.getElementById('remaining-absences').textContent = Math.max(0, faltasPermitidas);
+            
+            // Atualizar outras estatísticas fixas
+            document.getElementById('total-absences').textContent = `${SYSTEM_METRICS.FALTAS_ACUMULADAS}h`;
+            document.getElementById('impact-per-absence').textContent = `-${SYSTEM_METRICS.IMPACTO_POR_FALTA}%`;
+        }
+
+
+function atualizarSituacaoAluno() {
+    // 1. Guards de DOM: Se os elementos não existem, aborta sem erro para não travar o JS.
+    const statusCard = document.getElementById('status-card');
+    const alertBox = document.getElementById('alert-box');
+    
+    if (!statusCard || !alertBox) {
+        console.warn('Elementos de interface não encontrados para atualizar situação.');
+        return;
+    }
+
+    // 2. Extração Segura (Defensive Parsing):
+    // Usa Optional Chaining (?.) e valores padrão para evitar undefined/null
+    const frequenciaAtual = Number(state?.frequenciaAtual ?? 0);
+    const frequenciaMinima = Number(SYSTEM_METRICS?.FREQUENCIA_MINIMA ?? 75);
+    const impactoPorFalta = Number(SYSTEM_METRICS?.IMPACTO_POR_FALTA ?? 0);
+
+    // 3. Validação de Integridade:
+    // Se impacto for 0 ou inválido, evita divisão por zero/Infinity.
+    if (impactoPorFalta <= 0) {
+        console.error('Configuração inválida: IMPACTO_POR_FALTA deve ser maior que zero.');
+        return; 
+    }
+
+    // 4. Cálculos
+    const margem = frequenciaAtual - frequenciaMinima;
+    // Math.max(0, ...) garante que não mostraremos números negativos de faltas permitidas
+    const faltasQueAindaPodeTer = Math.max(0, Math.floor(margem / impactoPorFalta));
+
+    // Garante que o box esteja visível
+    alertBox.style.display = 'block';
+
+    // --- LÓGICA DE ESTADOS ---
+
+    // CENÁRIO 1: REPROVADO (Margem negativa)
+    // Correção: Usamos < 0. Se a margem for 0 (está no limite), ele cai no Warning abaixo.
+    if (margem < 0) {
+        statusCard.className = 'status-card danger';
+        statusCard.innerHTML = '❌ REPROVADO por frequência';
+        alertBox.innerHTML = `
+            <div style="font-size: 1.5rem;">❌</div>
+            <div>Frequência atual (${frequenciaAtual.toFixed(2)}%) está abaixo do mínimo exigido.</div>
+        `;
+        return;
+    }
+
+    // CENÁRIO 2: ATENÇÃO (Margem baixa ou zerada, mas ainda não reprovado)
+    // Adicionei margem === 0 aqui para alertar que não há mais margem de erro.
+    if (margem === 0 || faltasQueAindaPodeTer <= 5) {
+        const mensagemFaltas = faltasQueAindaPodeTer === 0 
+            ? "Você atingiu o limite. <strong>Não pode mais faltar.</strong>"
+            : `Você ainda pode faltar <strong>${faltasQueAindaPodeTer}</strong> dia(s) antes da reprovação.`;
+
+        statusCard.className = 'status-card warning';
+        statusCard.innerHTML = '⚠️ ATENÇÃO';
+        alertBox.innerHTML = `
+            <div style="font-size: 1.5rem;">⚠️</div>
+            <div>${mensagemFaltas}</div>
+        `;
+        return;
+    }
+
+    // CENÁRIO 3: APTO (Confortável)
+    statusCard.className = 'status-card safe';
+    statusCard.innerHTML = '✅ APTO';
+    alertBox.innerHTML = `
+        <div style="font-size: 1.5rem;">✅</div>
+        <div>
+            Situação confortável. Você pode faltar até
+            <strong>${faltasQueAindaPodeTer}</strong> dia(s).
+        </div>
+    `;
+}
+
+
+        function atualizarResumoMensal() {
+            const jan = state.estatisticasMensais.janeiro;
+            const fev = state.estatisticasMensais.fevereiro;
+            
+            document.getElementById('jan-present').textContent = jan.presentes;
+            document.getElementById('jan-absent').textContent = jan.ausentes;
+            document.getElementById('jan-impact').textContent = `-${jan.impacto.toFixed(2)}%`;
+            
+            document.getElementById('feb-present').textContent = fev.presentes;
+            document.getElementById('feb-absent').textContent = fev.ausentes;
+            document.getElementById('feb-impact').textContent = `-${fev.impacto.toFixed(2)}%`;
+        }
+
+        // ========== PERSISTÊNCIA ==========
+        function salvarEstado() {
+            const dadosParaSalvar = {
+                diasMarcados: state.diasMarcados,
+                mesAtual: state.mesAtual,
+                dataSalvamento: new Date().toISOString(),
+                versao: '1.0-2026'
+            };
+            
+            try {
+                localStorage.setItem('calendarioDeterministico2026', JSON.stringify(dadosParaSalvar));
+                alert('✅ Progresso salvo com sucesso!');
+            } catch (error) {
+                alert('❌ Erro ao salvar: ' + error.message);
+            }
+        }
+
+        function carregarEstado() {
+            try {
+                const dadosSalvos = localStorage.getItem('calendarioDeterministico2026');
+                
+                if (dadosSalvos) {
+                    const dados = JSON.parse(dadosSalvos);
+                    
+                    if (dados.diasMarcados) {
+                        state.diasMarcados = dados.diasMarcados;
+                    }
+                    
+                    if (dados.mesAtual !== undefined) {
+                        state.mesAtual = dados.mesAtual;
+                    }
+                    
+                    console.log('Estado carregado com sucesso');
+                }
+            } catch (error) {
+                console.error('Erro ao carregar estado:', error);
+            }
+        }
+
+        // ========== CONFIGURAR EVENTOS ==========
+        function configurarEventos() {
+            // Botão salvar
+            document.getElementById('save-btn').addEventListener('click', salvarEstado);
+            
+            // Botão reiniciar tudo
+            document.getElementById('reset-btn').addEventListener('click', () => {
+                if (confirm('Tem certeza que deseja reiniciar todo o progresso?')) {
+                    state.diasMarcados = {};
+                    state.mesAtual = 0;
+                    calcularEstadoCompleto();
+                    renderizarCalendario();
+                    atualizarInterfaceCompleta();
+                    localStorage.removeItem('calendarioDeterministico2026');
+                }
+            });
+            
+            // Botão limpar mês atual
+            document.getElementById('reset-month-btn').addEventListener('click', () => {
+                const meses = ['Janeiro', 'Fevereiro'];
+                const confirmacao = confirm(`Deseja limpar todas as marcações de ${meses[state.mesAtual]}?`);
+                
+                if (confirmacao) {
+                    // Remover apenas os dias do mês atual
+                    const prefixoMes = `${SYSTEM_METRICS.ANO_BASE}-${(state.mesAtual + 1).toString().padStart(2, '0')}`;
+                    
+                    Object.keys(state.diasMarcados).forEach(data => {
+                        if (data.startsWith(prefixoMes)) {
+                            delete state.diasMarcados[data];
+                        }
+                    });
+                    
+                    calcularEstadoCompleto();
+                    atualizarInterfaceCompleta();
+                    renderizarCalendario();
+                }
+            });
+            
+            // Navegação do calendário
+            document.getElementById('prev-month').addEventListener('click', () => {
+                if (state.mesAtual > 0) {
+                    state.mesAtual--;
+                    renderizarCalendario();
+                }
+            });
+            
+            document.getElementById('next-month').addEventListener('click', () => {
+                if (state.mesAtual < 1) { // Apenas Janeiro e Fevereiro
+                    state.mesAtual++;
+                    renderizarCalendario();
+                }
+            });
+            
+            // Botão "Hoje"
+            document.getElementById('today-btn').addEventListener('click', () => {
+                const hoje = HOJE_SISTEMA;
+                // Só permite ir para Janeiro ou Fevereiro 2026
+                if (hoje.getFullYear() === 2026 && (hoje.getMonth() === 0 || hoje.getMonth() === 1)) {
+                    state.mesAtual = hoje.getMonth();
+                    renderizarCalendario();
+                } else {
+                    alert('O período letivo é apenas Janeiro e Fevereiro de 2026');
+                    state.mesAtual = 0; // Volta para Janeiro
+                    renderizarCalendario();
+                }
+            });
+        }
+
+        // ========== FUNÇÕES AUXILIARES ==========
+        function formatarData(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,643 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestor de Dias Letivos 2025</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+   
+    <link rel="stylesheet" href="Style.css">
+
+  <script src="Script.js" defer></script>
+
+
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1><i class="fas fa-calendar-alt"></i> Gestor de Dias Letivos 2025</h1>
+            <p>Controle integrado de progresso, presença e desempenho do curso</p>
+        </header>
+
+        <div class="dashboard">
+            <div>
+                <div class="card fade-in">
+                    <h2 class="section-title">
+                        <i class="fas fa-chart-line"></i> Progresso do Curso
+                    </h2>
+
+                    <div class="progress-container">
+                        <div class="progress-label">
+                            <span>Progresso Geral do Curso</span>
+                            <span id="progress-percent">0%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progress-fill" style="width: 0%">
+                                <span class="progress-text" id="progress-text">0%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="results-grid">
+                        <div class="result-card total">
+                            <div class="result-label">Total do Curso</div>
+                            <div class="result-value" id="total-dias">56</div>
+                            <div class="result-desc">Dias letivos totais</div>
+                        </div>
+                        <div class="result-card">
+                            <div class="result-label">Dias Concluídos</div>
+                            <div class="result-value" id="dias-concluidos">0</div>
+                            <div class="result-desc">Realizados até agora</div>
+                        </div>
+                        <div class="result-card">
+                            <div class="result-label">Dias Restantes</div>
+                            <div class="result-value" id="dias-restantes">56</div>
+                            <div class="result-desc">Para concluir</div>
+                        </div>
+                        <div class="result-card ano-atual">
+                            <div class="result-label">Restante 2025</div>
+                            <div class="result-value" id="dias-2025">56</div>
+                            <div class="result-desc">Dias neste ano</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card fade-in">
+                    <h2 class="section-title">
+                        <i class="fas fa-user-check"></i> Controle de Presença
+                    </h2>
+
+                    <div class="results-grid">
+                        <div class="result-card presenca">
+                            <div class="result-label">Frequência no Curso</div>
+                            <div class="result-value" id="frequencia-curso">81.91%</div>
+                            <div class="result-desc">Percentual de presença</div>
+                        </div>
+                        <div class="result-card">
+                            <div class="result-label">Total de Faltas</div>
+                            <div class="result-value" id="total-faltas">217:00</div>
+                            <div class="result-desc">Horas de falta</div>
+                        </div>
+                        <div class="result-card">
+                            <div class="result-label">Horas do Curso</div>
+                            <div class="result-value" id="horas-curso">1200</div>
+                            <div class="result-desc">Total de horas</div>
+                        </div>
+                    </div>
+
+                    <div class="situacao-curso situacao-em-progresso" id="situacao-curso">
+                        Situação do Curso: Em Progresso
+                    </div>
+
+                    <div class="presenca-info">
+                        <div class="presenca-item">
+                            <div class="presenca-label">Horas por Dia</div>
+                            <div class="presenca-value">4</div>
+                            <div class="result-desc">Carga horária diária</div>
+                        </div>
+                        <div class="presenca-item">
+                            <div class="presenca-label">Dias na Semana</div>
+                            <div class="presenca-value">5</div>
+                            <div class="result-desc">Dias letivos semanais</div>
+                        </div>
+                        <div class="presenca-item">
+                            <div class="presenca-label">Impacto por Falta</div>
+                            <div class="presenca-value">-0.25%</div>
+                            <div class="result-desc">Redução na frequência</div>
+                        </div>
+                    </div>
+
+                    <div class="falta-input-container">
+                        <div>
+                            <label for="horas-falta" class="presenca-label">Adicionar Horas de Falta:</label>
+                            <input type="number" id="horas-falta" class="falta-input" min="0" max="100" value="4" step="0.5">
+                        </div>
+                        <button class="btn btn-warning" onclick="adicionarFalta()">
+                            <i class="fas fa-user-times"></i> Registrar Falta
+                        </button>
+                    </div>
+
+                    <div class="text-center mt-2">
+                        <button class="btn btn-outline" onclick="reiniciarFaltas()">
+                            <i class="fas fa-redo"></i> Reiniciar Faltas
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <div class="card fade-in">
+                    <h2 class="section-title">
+                        <i class="fas fa-cogs"></i> Configurações
+                    </h2>
+
+                    <div class="config-panel">
+                        <div class="config-item">
+                            <div class="config-label">Horas Totais do Curso:</div>
+                            <input type="number" id="config-horas-total" class="config-input" min="1" value="1200">
+                        </div>
+                        <div class="config-item">
+                            <div class="config-label">Horas por Dia:</div>
+                            <input type="number" id="config-horas-dia" class="config-input" min="1" max="12" value="4">
+                        </div>
+                        <div class="config-item">
+                            <div class="config-label">Dias por Semana:</div>
+                            <input type="number" id="config-dias-semana" class="config-input" min="1" max="7" value="5">
+                        </div>
+                        <div class="config-item">
+                            <div class="config-label">Impacto por Falta (%):</div>
+                            <input type="number" id="config-impacto-falta" class="config-input" min="0.01" max="5" step="0.01" value="0.25">
+                        </div>
+                        <div class="text-center">
+                            <button class="btn btn-primary" onclick="atualizarConfiguracoes()">
+                                <i class="fas fa-sync"></i> Atualizar Configurações
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="integrated-stats">
+                        <div class="stat-card">
+                            <div class="stat-label">Horas Concluídas</div>
+                            <div class="stat-value" id="horas-concluidas">0</div>
+                            <div class="stat-desc">Do total de horas</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Horas Restantes</div>
+                            <div class="stat-value" id="horas-restantes">1200</div>
+                            <div class="stat-desc">Para conclusão</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Semanas Restantes</div>
+                            <div class="stat-value" id="semanas-restantes">-</div>
+                            <div class="stat-desc">Baseado no ritmo atual</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card fade-in">
+                    <h2 class="section-title">
+                        <i class="fas fa-bolt"></i> Ações Rápidas
+                    </h2>
+
+                    <div class="day-actions">
+                        <div class="day-action-card">
+                            <h3><i class="fas fa-check-circle text-success"></i> Concluir Dia</h3>
+                            <p>Marque o dia atual como concluído</p>
+                            <button class="btn btn-success w-100 mt-2" onclick="concluirDiaAtual()">
+                                <i class="fas fa-check"></i> Concluir Hoje
+                            </button>
+                        </div>
+                        
+                        <div class="day-action-card">
+                            <h3><i class="fas fa-plus-circle text-primary"></i> Adicionar Dias</h3>
+                            <p>Adicione múltiplos dias concluídos</p>
+                            <div class="d-flex gap-1 mt-2">
+                                <input type="number" id="dias-adicionais" class="form-control" min="1" max="30" value="1" style="text-align: center;">
+                                <button class="btn btn-primary" onclick="adicionarDias()">
+                                    <i class="fas fa-plus"></i> Add
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="text-center mt-2">
+                        <button class="btn btn-outline" onclick="ajustarManual()">
+                            <i class="fas fa-sliders-h"></i> Ajuste Manual
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card fade-in">
+            <div class="d-flex justify-between align-center">
+                <h2 class="section-title">
+                    <i class="fas fa-edit"></i> Dias por Mês (Editável)
+                </h2>
+                <button class="btn btn-outline" onclick="toggleEditAll()">
+                    <i class="fas fa-edit"></i> Editar Todos
+                </button>
+            </div>
+
+            <div class="months-grid" id="months-grid">
+                <!-- Meses serão gerados dinamicamente -->
+            </div>
+        </div>
+
+        <div class="card fade-in">
+            <h2 class="section-title">
+                <i class="fas fa-list-alt"></i> Detalhamento por Mês
+            </h2>
+
+            <div class="table-container">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Mês</th>
+                            <th>Dias Letivos</th>
+                            <th>Concluídos</th>
+                            <th>Restantes</th>
+                            <th>Progresso</th>
+                            <th>Horas Concluídas</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabela-detalhes">
+                        <!-- Preenchido via JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card fade-in">
+            <h2 class="section-title">
+                <i class="fas fa-chart-pie"></i> Estatísticas Integradas
+            </h2>
+            
+            <div class="results-grid">
+                <div class="result-card">
+                    <div class="result-label">Previsão de Término</div>
+                    <div class="result-value" id="previsao-termino">12/02/2026</div>
+                    <div class="result-desc" id="detalhe-previsao">Data prevista para término</div>
+                </div>
+                <div class="result-card">
+                    <div class="result-label">Eficiência</div>
+                    <div class="result-value" id="eficiencia">0%</div>
+                    <div class="result-desc">Do planejado</div>
+                </div>
+                <div class="result-card">
+                    <div class="result-label">Ritmo Atual</div>
+                    <div class="result-value" id="ritmo-atual">-</div>
+                    <div class="result-desc">Dias/semana</div>
+                </div>
+                <div class="result-card danger" id="card-alerta">
+                    <div class="result-label">Status de Frequência</div>
+                    <div class="result-value" id="status-frequencia">-</div>
+                    <div class="result-desc" id="detalhe-frequencia">Avaliação da presença</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="actions">
+            <button class="btn btn-outline" onclick="reiniciarProgresso()">
+                <i class="fas fa-redo"></i> Reiniciar Tudo
+            </button>
+            <button class="btn btn-outline" onclick="exportarDados()">
+                <i class="fas fa-download"></i> Exportar Dados
+            </button>
+            <button class="btn btn-primary" onclick="salvarConfiguracoes()">
+                <i class="fas fa-save"></i> Salvar Tudo
+            </button>
+        </div>
+    </div>
+    </div>
+
+        <!-- Modal para ajustes manuais (opcional) -->
+    <div id="modal-ajuste" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-sliders-h"></i> Ajuste Manual de Progresso</h3>
+                <button class="modal-close" onclick="fecharModal('modal-ajuste')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Funcionalidade de ajuste manual avançado...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Funções auxiliares para modais
+        function fecharModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        function abrirModal(modalId) {
+            document.getElementById(modalId).style.display = 'block';
+        }
+
+        // Fechar modal clicando fora
+        window.onclick = function(event) {
+            const modals = document.getElementsByClassName('modal');
+            for (let modal of modals) {
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                }
+            }
+        }
+
+    </script>
+<!-- ========== CALENDÁRIO INTEGRADO ========== -->
+<div class="card fade-in">
+    <h2 class="section-title">
+        <i class="fas fa-calendar-alt"></i> Calendário Integrado
+    </h2>
+    
+    <!-- Container do Calendário -->
+    <div id="calendar-component-container" style="border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; min-height: 500px; background: white;">
+        <div style="padding: 20px; text-align: center; color: var(--gray);">
+            <i class="fas fa-spinner fa-spin" style="font-size: 2rem; margin-bottom: 10px;"></i>
+            <p>Carregando calendário...</p>
+        </div>
+    </div>
+    
+    <!-- Status da Integração -->
+    <div style="margin-top: 15px; padding: 12px; background: #e8f4fd; border-radius: var(--radius); border-left: 4px solid var(--primary);">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+            <div>
+                <strong>Status da Integração</strong>
+                <div style="display: flex; gap: 15px; margin-top: 5px; font-size: 0.9rem;">
+                    <span id="sync-status">🟡 Conectando...</span>
+                    <span>Dias restantes: <strong id="remaining-days-calendar">-</strong></span>
+                    <span>Invalidados: <strong id="invalidated-days-count">0</strong></span>
+                </div>
+            </div>
+            <button onclick="forceSync()" class="btn btn-outline" style="padding: 5px 10px; font-size: 0.8rem;">
+                <i class="fas fa-sync"></i> Sincronizar
+            </button>
+        </div>
+    </div>
+
+    <!-- Controles do Gestor -->
+    <div style="margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap;">
+        <button onclick="addEventViaManager()" class="btn btn-primary">
+            <i class="fas fa-plus-circle"></i> Evento para Hoje
+        </button>
+        <button onclick="invalidateToday()" class="btn btn-warning">
+            <i class="fas fa-ban"></i> Invalidar Hoje
+        </button>
+        <button onclick="validateToday()" class="btn btn-success">
+            <i class="fas fa-check"></i> Reativar Hoje
+        </button>
+        <button onclick="getTodayEvents()" class="btn btn-outline">
+            <i class="fas fa-list"></i> Ver Eventos
+        </button>
+    </div>
+</div>
+
+<script>
+// ========== SISTEMA DE INTEGRAÇÃO CALENDÁRIO ==========
+let calendarAPI = null;
+let calendarIntegration = {
+    init: function() {
+        console.log('Inicializando integração com calendário...');
+        
+        // Monitorar mudanças no localStorage do calendário
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'calendarEvents' || e.key === 'invalidatedDays') {
+                calendarIntegration.handleCalendarUpdate();
+            }
+        });
+        
+        // Ouvir mensagens do calendário
+        window.addEventListener('message', function(event) {
+            if (event.data && event.data.type === 'CALENDAR_UPDATE') {
+                console.log('Recebida atualização do calendário:', event.data);
+                calendarIntegration.handleCalendarUpdate();
+                
+                // Atualizar status
+                updateSyncStatus('🟢 Sincronizado');
+            }
+            
+            if (event.data && event.data.type === 'CALENDAR_READY') {
+                console.log('Calendário reportou que está pronto');
+                updateSyncStatus('🟢 Conectado');
+            }
+        });
+        
+        // Sincronização inicial
+        setTimeout(() => {
+            calendarIntegration.handleCalendarUpdate();
+        }, 1000);
+    },
+    
+    handleCalendarUpdate: function() {
+        console.log('Sincronizando com calendário...');
+        
+        try {
+            const updatedInvalidatedDays = JSON.parse(localStorage.getItem('invalidatedDays') || '[]');
+            const updatedEvents = JSON.parse(localStorage.getItem('calendarEvents') || '{}');
+            
+            // Atualizar contadores visuais
+            document.getElementById('invalidated-days-count').textContent = updatedInvalidatedDays.length;
+            
+            // Recalcular dias letivos considerando dias invalidados
+            this.updateDiasLetivos(updatedInvalidatedDays);
+            
+            // Atualizar progresso geral
+            if (window.atualizarProgressoGeral) {
+                window.atualizarProgressoGeral();
+            }
+            
+        } catch (error) {
+            console.error('Erro na sincronização:', error);
+        }
+    },
+    
+    updateDiasLetivos: function(invalidatedDays) {
+        // Esta função integra os dias invalidados do calendário com o gestor
+        if (!window.calendarDiasInvalidados) {
+            window.calendarDiasInvalidados = new Set();
+        }
+        
+        // Converter array para Set para fácil manipulação
+        window.calendarDiasInvalidados = new Set(invalidatedDays);
+        
+        console.log('Dias invalidados no calendário:', invalidatedDays.length);
+        
+        // Recalcular totais considerando dias invalidados
+        this.recalcularTotais();
+    },
+    
+    recalcularTotais: function() {
+        // Esta função deve ser integrada com sua lógica existente
+        if (window.calendarDiasInvalidados) {
+            const diasInvalidadosCount = window.calendarDiasInvalidados.size;
+            
+            // Atualizar dias restantes no gestor
+            const diasRestantesElement = document.getElementById('dias-restantes');
+            const diasConcluidosElement = document.getElementById('dias-concluidos');
+            
+            if (diasRestantesElement && diasConcluidosElement) {
+                const totalDias = 56; // Seu total original
+                const concluidos = parseInt(diasConcluidosElement.textContent) || 0;
+                const restantes = totalDias - concluidos - diasInvalidadosCount;
+                
+                diasRestantesElement.textContent = Math.max(0, restantes);
+                document.getElementById('remaining-days-calendar').textContent = Math.max(0, restantes);
+            }
+            
+            // Disparar evento para outros componentes
+            window.dispatchEvent(new CustomEvent('diasLetivosAtualizados', {
+                detail: { diasInvalidados: diasInvalidadosCount }
+            }));
+        }
+    }
+};
+
+// Carregar calendário via iframe
+function loadCalendarSimple() {
+    const container = document.getElementById('calendar-component-container');
+    
+    container.innerHTML = `
+        <iframe 
+            src="Calendario.index.html" 
+            width="100%" 
+            height="650" 
+            frameborder="0"
+            style="border: none;"
+            onload="onCalendarLoaded(this)"
+            onerror="onCalendarError(this)"
+        ></iframe>
+    `;
+}
+
+function onCalendarLoaded(iframe) {
+    console.log('Calendário carregado com sucesso!');
+    updateSyncStatus('🟢 Carregado');
+    
+    // Inicializar integração
+    calendarIntegration.init();
+    
+    // Tentar acessar API direta
+    try {
+        calendarAPI = iframe.contentWindow.CalendarAPI;
+        if (calendarAPI) {
+            console.log('API direta do calendário disponível');
+        }
+    } catch (e) {
+        console.log('Usando bridge API');
+    }
+}
+
+function onCalendarError(iframe) {
+    console.error('Erro ao carregar calendário');
+    updateSyncStatus('🔴 Erro');
+    
+    document.getElementById('calendar-component-container').innerHTML = `
+        <div style="padding: 30px; text-align: center; color: var(--danger);">
+            <i class="fas fa-exclamation-triangle" style="font-size: 2rem; margin-bottom: 10px;"></i>
+            <p><strong>Erro ao carregar o calendário</strong></p>
+            <p style="font-size: 0.9rem; margin-bottom: 15px;">Verifique se o arquivo "Calendario.index.html" está na mesma pasta.</p>
+            <button onclick="loadCalendarSimple()" class="btn btn-primary">
+                <i class="fas fa-redo"></i> Tentar Novamente
+            </button>
+        </div>
+    `;
+}
+
+// Funções de controle
+function addEventViaManager() {
+    const eventTitle = prompt('Título do evento para hoje:');
+    if (eventTitle) {
+        // Tentar via API direta primeiro
+        if (calendarAPI && calendarAPI.addEvent) {
+            const success = calendarAPI.addEvent({
+                title: eventTitle,
+                type: 'aula',
+                description: 'Adicionado via Gestor de Dias',
+                date: new Date().toISOString().split('T')[0]
+            });
+            
+            if (success) {
+                showToast('Evento adicionado com sucesso!', 'success');
+            }
+        } else {
+            // Fallback: adicionar diretamente no localStorage
+            const today = new Date().toISOString().split('T')[0];
+            const events = JSON.parse(localStorage.getItem('calendarEvents') || '{}');
+            
+            if (!events[today]) events[today] = [];
+            
+            events[today].push({
+                title: eventTitle,
+                date: today,
+                type: 'aula', 
+                description: 'Adicionado via Gestor de Dias',
+                color: 'success',
+                createdAt: new Date().toISOString()
+            });
+            
+            localStorage.setItem('calendarEvents', JSON.stringify(events));
+            showToast('Evento adicionado com sucesso!', 'success');
+            
+            // Forçar sincronização
+            calendarIntegration.handleCalendarUpdate();
+        }
+    }
+}
+
+function invalidateToday() {
+    if (confirm('Invalidar o dia de hoje no calendário?\n\nIsso marcará o dia como sem aula e afetará a contagem de dias letivos.')) {
+        const today = new Date().toISOString().split('T')[0];
+        const invalidatedDays = JSON.parse(localStorage.getItem('invalidatedDays') || '[]');
+        
+        if (!invalidatedDays.includes(today)) {
+            invalidatedDays.push(today);
+            localStorage.setItem('invalidatedDays', JSON.stringify(invalidatedDays));
+            showToast('Dia invalidado com sucesso!', 'success');
+            calendarIntegration.handleCalendarUpdate();
+        } else {
+            alert('Hoje já está invalidado no calendário.');
+        }
+    }
+}
+
+function validateToday() {
+    const today = new Date().toISOString().split('T')[0];
+    const invalidatedDays = JSON.parse(localStorage.getItem('invalidatedDays') || '[]');
+    const index = invalidatedDays.indexOf(today);
+    
+    if (index !== -1) {
+        invalidatedDays.splice(index, 1);
+        localStorage.setItem('invalidatedDays', JSON.stringify(invalidatedDays));
+        showToast('Dia reativado com sucesso!', 'success');
+        calendarIntegration.handleCalendarUpdate();
+    } else {
+        alert('Hoje não está invalidado no calendário.');
+    }
+}
+
+function getTodayEvents() {
+    const today = new Date().toISOString().split('T')[0];
+    const events = JSON.parse(localStorage.getItem('calendarEvents') || '{}');
+    const todayEvents = events[today] || [];
+    
+    if (todayEvents.length === 0) {
+        alert('Nenhum evento para hoje no calendário.');
+    } else {
+        const eventList = todayEvents.map(e => `• ${e.title} (${e.type})`).join('\n');
+        alert(`Eventos de hoje:\n\n${eventList}`);
+    }
+}
+
+function forceSync() {
+    calendarIntegration.handleCalendarUpdate();
+    showToast('Sincronização forçada realizada!', 'success');
+    
+    // Notificar calendário
+    const iframe = document.querySelector('#calendar-component-container iframe');
+    if (iframe && iframe.contentWindow) {
+        iframe.contentWindow.postMessage({ type: 'SYNC_REQUEST' }, '*');
+    }
+}
+
+function updateSyncStatus(status) {
+    const statusElement = document.getElementById('sync-status');
+    if (statusElement) {
+        statusElement.textContent = status;
+    }
+}
+
+// Função auxiliar para mostrar notificações
+function showToast(message, type = 'success') {
+    // Você pode implementar um sistema de toast ou usar alert simples
+    console.log(`${type.toUpperCase()}: ${message}`);
+}
+
+// Inicializar quando a página carregar
+document.addEventListener('DOMContentLoaded', function() {
+    // Pequeno delay para garantir que o gestor principal carregou primeiro
+    setTimeout(loadCalendarSimple, 500);
+});
+</script>
